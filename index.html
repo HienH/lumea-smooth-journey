@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lumea Smooth Journey</title>
+<style>:root{box-sizing:border-box}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: two-pane player (phone + guide) over a captioned gallery; phone interior is a fixed-light Philips Lumea app world in violet and lilac. */
+:root{
+  --bg:#f6f3f8; --fg:#221c27; --muted:#6c6275; --card:#ffffff; --line:#e3dcea;
+  --accent:#6a2c91; --accent-soft:#efe6f7; --star:#d99a06; --good:#2e7d4f; --half:#a06a00; --net:#1f7a8c;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16121b; --fg:#eee8f3; --muted:#a79db2; --card:#1f1a26; --line:#352d3f;
+    --accent:#b99ae3; --accent-soft:#34283f; --star:#e8b232; --good:#6fbf8f; --half:#d9a94a; --net:#5fb8c8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16121b; --fg:#eee8f3; --muted:#a79db2; --card:#1f1a26; --line:#352d3f;
+  --accent:#b99ae3; --accent-soft:#34283f; --star:#e8b232; --good:#6fbf8f; --half:#d9a94a; --net:#5fb8c8;
+  color-scheme:dark;
+}
+body{background:var(--bg); color:var(--fg); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; margin:0;}
+.doc{max-width:1080px; margin:0 auto; padding-block:36px 80px; padding-inline:20px;}
+.doc h1{font-size:30px; margin:0 0 6px; letter-spacing:-.02em; text-wrap:balance;}
+.lede{color:var(--muted); max-width:64ch; margin:0 0 4px;}
+.brandnote{font-size:13px; color:var(--muted); margin:0 0 22px; max-width:72ch;}
+.legend{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 26px;}
+.pill{display:inline-block; font-size:11px; font-weight:600; letter-spacing:.04em; padding:2px 9px; border-radius:99px; border:1px solid var(--line);}
+.pill.have{color:var(--good); border-color:currentColor;}
+.pill.half{color:var(--half); border-color:currentColor;}
+.pill.net{color:var(--net); border-color:currentColor;}
+.pill.stub{color:var(--muted);}
+.pdf-note{display:none; background:var(--accent); color:var(--bg); padding:10px 14px; border-radius:8px; font-weight:600; margin:0 0 16px;}
+
+/* player stage */
+.demo-player-section{margin:0 0 64px;}
+.demo-player-stage{display:flex; gap:36px; align-items:flex-start; justify-content:center;}
+.demo-player-counter{text-align:center; color:var(--muted); font-size:12.5px; margin-top:10px;}
+
+.phone{width:392px; height:788px; flex:0 0 auto; background:#0e0b11; border-radius:44px; padding:10px; box-shadow:0 18px 50px rgba(20,8,30,.24); position:relative;}
+.phone-screen{position:relative; width:100%; height:100%; border-radius:35px; overflow:hidden; background:#f8f4fb;}
+
+#screen-deck{display:none;}
+#demo-player-phone .screen-state{position:absolute; inset:0; display:none; flex-direction:column; background:#f8f4fb; color:#251d2b;}
+#demo-player-phone .screen-state.active{display:flex;}
+@media (prefers-reduced-motion: no-preference){
+  #demo-player-phone .screen-state.active[data-anim="fwd"]{animation:slideFwd .32s ease;}
+  #demo-player-phone .screen-state.active[data-anim="back"]{animation:slideBack .32s ease;}
+  #demo-player-phone .screen-state.active[data-anim="fade"]{animation:fadeIn .28s ease;}
+  .cal .d.today{animation:starPulse 1.7s ease infinite;}
+}
+@keyframes slideFwd{from{transform:translateX(100%);} to{transform:none;}}
+@keyframes slideBack{from{transform:translateX(-100%);} to{transform:none;}}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+@keyframes starPulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.09);}}
+
+/* in-phone chrome */
+.statusbar{flex:0 0 auto; height:34px; display:flex; justify-content:space-between; align-items:center; padding:0 22px; font-size:12px; font-weight:600; color:#251d2b;}
+.appbar{flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:6px 16px 10px;}
+.appbar .wordmark{font-weight:800; font-size:16px; letter-spacing:.16em; color:#4b1d6b;}
+.appbar .lumea{font-weight:600; font-size:17px; font-style:italic; color:#6a2c91; margin-left:-4px;}
+.appbar h2{font-size:16.5px; margin:0; font-weight:700; flex:1; min-width:0;}
+.hello{margin-left:auto; font-size:13px; font-weight:700; color:#6c6275;}
+.backbtn{width:34px; height:34px; border-radius:50%; background:#eee7f4; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;}
+.backbtn svg{width:18px; height:18px; stroke:#251d2b; stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+.backbtn.light{background:rgba(255,255,255,.22);}
+.backbtn.light svg{stroke:#fff;}
+.app{flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:4px 16px 20px;}
+.bottomnav{flex:0 0 auto; display:flex; border-top:1px solid #e6deee; background:#fffdff;}
+.bottomnav .tab{flex:1; text-align:center; padding:9px 0 12px; font-size:10.5px; font-weight:600; color:#9c92a6; cursor:pointer;}
+.bottomnav .tab .ico{display:block; font-size:17px; line-height:1.15;}
+.bottomnav .tab.on{color:#6a2c91;}
+.bottomnav .tab[data-inert]{opacity:.45; cursor:default;}
+
+/* in-phone components */
+.card{background:#ffffff; border:1px solid #ebe3f1; border-radius:20px; padding:14px 15px; margin:0 0 12px; box-shadow:0 1px 2px rgba(40,20,60,.05);}
+.card h3{margin:0 0 4px; font-size:15px;}
+.card p{margin:0; font-size:13px; color:#6c6275;}
+.cta{display:block; text-align:center; background:#6a2c91; color:#fff; font-weight:800; font-size:16px; border-radius:18px; padding:15px; cursor:pointer; margin:14px 0 4px;}
+.cta.sub{background:#eee7f4; color:#251d2b; font-weight:600;}
+.tapcard{cursor:pointer; transition:transform .12s ease;}
+.tapcard:active{transform:scale(.98);}
+.flash{outline:3px solid #d99a06; outline-offset:2px; border-radius:16px;}
+.eyebrow{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#6a2c91; margin:8px 0 4px;}
+.h-title{font-size:21px; font-weight:800; margin:2px 0 6px; line-height:1.25; letter-spacing:-.01em;}
+.sub{font-size:13px; color:#6c6275; margin:0 0 12px;}
+.tagline{font-size:12px; color:#9c92a6; margin:10px 0 0; text-align:center;}
+.center{text-align:center;}
+.concept-tag{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.05em; color:#1f7a8c; border:1px solid #1f7a8c; border-radius:99px; padding:1px 7px; vertical-align:2px;}
+.you{display:inline-block; font-size:10px; font-weight:800; letter-spacing:.04em; color:#2e7d4f; background:#e6f2ea; border-radius:99px; padding:2px 9px; margin-bottom:6px;}
+.planline{font-size:11.5px; color:#9c92a6; margin:0 0 8px;}
+
+/* chips + swatches */
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 4px;}
+.chip{border:1.5px solid #ddd2e8; border-radius:99px; padding:6px 13px; font-size:13px; font-weight:600; color:#6c6275; background:#fff;}
+.chip.sel{border-color:#6a2c91; color:#6a2c91; background:#f1e8f8;}
+.swatches{display:flex; gap:9px; margin:8px 0 2px;}
+.sw{width:40px; height:40px; border-radius:12px; border:2.5px solid transparent; position:relative;}
+.sw.sel{border-color:#6a2c91;}
+.sw.sel::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; text-shadow:0 1px 2px rgba(0,0,0,.4);}
+.sw.no{opacity:.38;}
+.swnote{font-size:11.5px; color:#9c92a6; margin:4px 0 10px;}
+
+/* onboarding carousel */
+.dots{flex:1; display:flex; gap:6px; justify-content:center; align-items:center;}
+.dots i{width:8px; height:8px; border-radius:99px; background:#ddd2e8;}
+.dots i.on{background:#6a2c91; width:22px;}
+.appbar .spacer{width:34px; flex:0 0 auto;}
+.app.onb{overflow-y:hidden; display:flex; flex-direction:column;}
+.app.onb .card{padding:11px 13px; margin-bottom:9px;}
+.app.onb .h-title{font-size:19px; margin:2px 0 4px;}
+.app.onb .sub{font-size:12.5px; margin-bottom:8px;}
+.app.onb .swnote{font-size:11px; margin-bottom:2px;}
+.app.onb .eyebrow{margin-top:2px;}
+.app.onb .cta{margin-top:auto;}
+
+/* camera viewfinders with stencils */
+.vf-pair{display:grid; grid-template-columns:1.1fr 1fr; gap:10px; margin:6px 0 8px;}
+.vf{position:relative; border-radius:16px; overflow:hidden; background:#241c2c; height:360px;}
+.app.onb .vf{height:400px;}
+.vf svg.stencil{position:absolute; left:0; top:30px; width:100%; height:calc(100% - 118px);}
+.vf .vf-lbl{position:absolute; left:0; right:0; top:8px; text-align:center; font-size:10.5px; font-weight:800; letter-spacing:.05em; color:#fff; text-transform:uppercase;}
+.vf .vf-hint{position:absolute; left:8px; right:8px; bottom:46px; text-align:center; font-size:10.5px; color:#d9cfe3;}
+.vf .shutter{position:absolute; left:50%; bottom:9px; width:30px; height:30px; margin-left:-15px; border-radius:50%; background:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35);}
+.vf .ok{position:absolute; right:8px; top:30px; font-size:10px; font-weight:800; color:#fff; background:#2e7d4f; border-radius:99px; padding:2px 8px;}
+.vf .closeup{position:absolute; left:50%; top:calc(50% - 90px); width:130px; height:130px; margin-top:0; margin-left:-65px; border-radius:50%; overflow:hidden; background:#e3b590; border:2.5px dashed #ffd75e;}
+.vf .closeup .ghost{position:absolute; inset:0; opacity:.3;}
+
+/* skin + hair textures */
+.hairs{position:absolute; inset:0;}
+.hairs.dense{background:repeating-linear-gradient(112deg, transparent 0 6px, rgba(46,32,22,.85) 6px 7.5px);}
+.hairs.med{background:repeating-linear-gradient(112deg, transparent 0 9px, rgba(46,32,22,.6) 9px 10.3px);}
+.hairs.sparse{background:repeating-linear-gradient(112deg, transparent 0 14px, rgba(66,48,34,.42) 14px 15px);}
+.hairs.faint{background:repeating-linear-gradient(112deg, transparent 0 21px, rgba(86,64,46,.22) 21px 21.8px);}
+.shot{border-radius:14px; overflow:hidden; border:1px solid #e8dcd0; position:relative; background:#e3b590; height:120px;}
+.shot .lbl{position:absolute; left:8px; bottom:6px; font-size:10.5px; font-weight:700; color:#fff; background:rgba(30,18,40,.55); padding:2px 8px; border-radius:99px;}
+.shot-pair{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;}
+
+/* calendar home */
+.monthhead{display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 2px;}
+.monthhead b{font-size:15px;}
+.monthhead span{font-size:11.5px; color:#9c92a6;}
+.cal{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:8px 0 6px;}
+.cal .dh{font-size:10px; font-weight:800; color:#b3a8bf; text-align:center; padding:2px 0;}
+.cal .d{aspect-ratio:1; border-radius:14px; background:#fff; border:1px solid #ebe3f1; display:flex; align-items:center; justify-content:center; font-size:23px; line-height:1; position:relative;}
+.cal .d b{position:absolute; top:3px; left:6px; font-size:9px; color:#b3a8bf; font-weight:800;}
+.cal .d.plain{font-size:12px; color:#c4bacd; font-weight:600;}
+.cal .d.blank{visibility:hidden;}
+.cal .d.earned{background:#fdf3d7; border-color:#e8c96a; color:#d99a06;}
+.cal .d.today{border:2.5px solid #6a2c91; color:#6a2c91; background:#f3eafa;}
+.nextstars{display:flex; gap:6px; margin:4px 0 12px; overflow:hidden;}
+.nextstars span{flex:1; text-align:center; font-size:10.5px; font-weight:700; color:#6c6275; background:#fff; border:1px solid #ebe3f1; border-radius:12px; padding:6px 2px; line-height:1.3;}
+.nextstars span i{display:block; font-style:normal; color:#e5d3ab; font-size:15px;}
+.progressline{display:flex; align-items:center; gap:10px; margin:2px 0 8px;}
+.progressline .bar{flex:1; height:8px; border-radius:99px; background:#ece4f3; overflow:hidden;}
+.progressline .bar i{display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,#d99a06,#6a2c91);}
+.progressline b{font-size:12.5px; white-space:nowrap;}
+.todaycard{display:flex; gap:14px; align-items:center; background:#6a2c91; border-radius:20px; padding:14px 16px; margin:0 0 12px; cursor:pointer; color:#fff;}
+.todaycard .today-ico{font-size:34px; line-height:1;}
+.todaycard h3{margin:0 0 2px; font-size:16.5px;}
+.todaycard p{margin:0; font-size:12.5px; color:#e4d3f2;}
+
+/* hair-now widget + follicle stages */
+.fwidget{display:flex; gap:14px; align-items:center;}
+.fcirc{position:relative; flex:0 0 auto; width:88px; height:88px;}
+.fcirc svg{width:88px; height:88px; border-radius:50%; border:3px solid #fff; box-shadow:0 2px 10px rgba(60,20,90,.18); display:block; box-sizing:border-box;}
+.fcirc .info{position:absolute; right:-2px; top:-2px; width:24px; height:24px; border-radius:50%; background:#6a2c91; color:#fff; font:italic 800 13px/24px Georgia,serif; text-align:center; border:2px solid #fff;}
+.stages{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:12px 0 14px;}
+.stage{text-align:center;}
+.stage svg{width:100%; max-width:68px; aspect-ratio:1; border-radius:50%; border:3px solid #fff; box-shadow:0 1px 6px rgba(60,20,90,.15); display:block; margin:0 auto 5px; box-sizing:border-box;}
+.stage.now svg{border-color:#6a2c91;}
+.stage b{display:block; font-size:10.5px; line-height:1.25;}
+.stage span{display:block; font-size:9.5px; color:#9c92a6; line-height:1.25; margin-top:2px;}
+.stage.now b{color:#6a2c91;}
+
+/* star-day pop-up sheet */
+.sheetdim{flex:1; background:rgba(30,18,44,.6); padding:10px 12px; display:flex; align-items:flex-start;}
+.sheet{flex:0 0 auto; background:#fffdff; border-radius:26px 26px 0 0; padding:8px 18px 18px; box-shadow:0 -10px 34px rgba(0,0,0,.28);}
+.grab{width:44px; height:5px; border-radius:99px; background:#ddd2e8; margin:2px auto 10px;}
+.follicle{width:100%; height:auto; display:block; margin:4px 0;}
+.stagebar{display:flex; gap:6px; margin:10px 0;}
+.stg{flex:1; text-align:center; font-size:11px; font-weight:800; color:#9c92a6; background:#eee7f4; border-radius:99px; padding:6px 0;}
+.stg.on{background:#6a2c91; color:#fff;}
+.skiplink{text-align:center; font-size:12.5px; color:#9c92a6; text-decoration:underline; cursor:pointer; padding:7px 0 2px;}
+
+/* loyalty card */
+.lcard{background:linear-gradient(135deg,#6a2c91,#4b1d6b); border-radius:20px; padding:14px 14px 12px; margin:14px 0 14px; color:#fff; box-shadow:0 8px 22px rgba(75,29,107,.3);}
+.lc-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;}
+.lc-head b{font-size:13px; letter-spacing:.04em;}
+.lc-head span{font-size:12px; font-weight:800; color:#ffd75e;}
+.slots{display:grid; grid-template-columns:repeat(3,46px) 1fr; grid-template-rows:46px 46px; gap:10px 12px; align-items:center;}
+.slot{position:relative; aspect-ratio:1; border-radius:50%; border:2px dashed rgba(255,255,255,.45); display:flex; align-items:center; justify-content:center;}
+.slot span{font-size:12px; font-weight:800; color:rgba(255,255,255,.55);}
+.slot.on{border:2px solid #ffd75e; background:#ffd75e;}
+.slot.on span{font-size:20px; color:#6a2c91;}
+.slot.prize{border-color:#ffd75e;}
+.slot.big{grid-column:4; grid-row:1 / span 2; width:100%; max-width:104px; justify-self:center; flex-direction:column; border-width:2.5px;}
+.slot.big span{font-size:40px; line-height:1;}
+.slots .slot:not(.big){width:46px; height:46px;}
+.slot.big small{font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#ffd75e; margin-top:2px;}
+.slot.big em{right:2px; bottom:2px; font-size:20px;}
+.slot em{position:absolute; right:-5px; bottom:-6px; font-style:normal; font-size:13px;}
+.lc-foot{font-size:11px; color:#e4d3f2; margin-top:10px; text-align:center;}
+
+/* star moment */
+.bigstar{font-size:74px; text-align:center; line-height:1; margin:26px 0 8px; color:#d99a06; text-shadow:0 6px 22px rgba(217,154,6,.35);}
+.ptsline{font-size:15px; font-weight:800; color:#2e7d4f; text-align:center; margin:2px 0 12px;}
+
+/* timeline strip */
+.strip{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0;}
+.frame{aspect-ratio:1; border-radius:12px; overflow:hidden; position:relative; border:1px solid #e8dcd0; background:#e3b590;}
+.frame.empty{background:#f4eef9; border:1.5px dashed #d3c6df; display:flex; align-items:center; justify-content:center; color:#ab9fb8; font-size:10.5px; font-weight:700; text-align:center; line-height:1.3;}
+.frame .wk{position:absolute; left:4px; bottom:3px; font-size:9.5px; font-weight:700; color:#fff; background:rgba(30,18,40,.5); padding:1px 6px; border-radius:99px;}
+
+/* lock screen */
+.lockwrap{background:linear-gradient(160deg,#3a2d48,#15101c); flex:1; display:flex; flex-direction:column; justify-content:center; padding:20px;}
+.locktime{color:#fdfbff; text-align:center; font-size:44px; font-weight:200; margin:0 0 2px;}
+.lockdate{color:#c8bdd4; text-align:center; font-size:13px; margin:0 0 26px;}
+.notif{background:rgba(252,250,255,.96); border-radius:18px; padding:13px 14px; cursor:pointer;}
+.notif .nh{display:flex; gap:8px; align-items:center; font-size:11px; color:#8f8699; font-weight:600; margin-bottom:4px;}
+.notif .dot{width:18px; height:18px; border-radius:5px; background:#6a2c91; color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;}
+.notif h3{margin:0 0 3px; font-size:14px;}
+.notif p{margin:0; font-size:12.5px; color:#5c5466;}
+.notif .mini{width:56px; height:56px; border-radius:10px; overflow:hidden; position:relative; flex:0 0 auto; background:#e3b590;}
+.locknote{color:#a79db2; font-size:11.5px; text-align:center; margin-top:18px;}
+
+/* session */
+.levels{display:flex; gap:6px; margin:8px 0 4px; align-items:center;}
+.levels .area{font-size:12px; font-weight:700; width:78px; flex:0 0 auto;}
+.lv{flex:1; text-align:center; border:1.5px solid #ddd2e8; border-radius:10px; padding:6px 0; font-weight:800; font-size:13px; color:#9c92a6; background:#fff;}
+.lv.sel{border-color:#6a2c91; color:#6a2c91; background:#f1e8f8;}
+.check{display:flex; gap:9px; align-items:flex-start; font-size:13px; margin:7px 0;}
+.check .tick{color:#2e7d4f; font-weight:800;}
+
+/* rewards tab + scratch cards */
+.rcard{display:flex; gap:12px; align-items:center; background:#fff; border:1px solid #ebe3f1; border-radius:18px; padding:10px 12px; margin:0 0 10px; opacity:.72;}
+.rcard.next{opacity:1; border-color:#e8c96a; background:#fffaf0;}
+.rcard h3{margin:0 0 2px; font-size:14px;}
+.rcard p{margin:0; font-size:12px; color:#6c6275;}
+.rfoil{position:relative; flex:0 0 auto; width:58px; height:58px; border-radius:12px; background:linear-gradient(135deg,#d9d3e0,#b9b0c6 45%,#ece6f2 55%,#a89fb6); display:flex; align-items:center; justify-content:center;}
+.rfoil span{font-size:22px; font-weight:900; color:#4b1d6b; opacity:.6;}
+.rfoil b{position:absolute; left:4px; top:3px; font-size:9.5px; color:#4b1d6b;}
+.rfoil.big{background:linear-gradient(135deg,#f3d27a,#d9a52c 45%,#fbe7a8 55%,#c8911c);}
+.scratchcard{position:relative; border-radius:20px; overflow:hidden; margin:12px 0 6px; background:#fdf3d7; min-height:170px; touch-action:none; border:1px solid #e8c96a;}
+.scratchcard.big{min-height:210px;}
+.scratchcard .reveal{padding:22px 18px; text-align:center;}
+.scratchcard .reveal h3{margin:4px 0 4px; font-size:17px;}
+.scratchcard .reveal p{margin:0; font-size:13px; color:#6c6275;}
+.rv-ico{font-size:40px; line-height:1;}
+.scratchcard .foil, .scratchcard canvas{position:absolute; inset:0; width:100%; height:100%;}
+.scratchcard .foil{background:linear-gradient(135deg,#d9d3e0,#b9b0c6 45%,#ece6f2 55%,#a89fb6); display:flex; align-items:center; justify-content:center;}
+.scratchcard .foil span{font-weight:800; color:#4b1d6b; font-size:15px;}
+.scratchcard canvas{cursor:grab; transition:opacity .45s ease;}
+.revealbtn{text-align:center; font-size:12px; color:#9c92a6; text-decoration:underline; cursor:pointer; margin:0 0 12px;}
+
+.rfoil.gift{background:#f1e8f8;}
+.rfoil.gift span{opacity:1; font-size:24px; color:#6a2c91;}
+.rcard.finish{opacity:1; border-color:#6a2c91;}
+.rcard.finish u{color:#6a2c91; font-weight:700; text-decoration:none;}
+
+/* guide panel sections */
+.gp-sections{display:flex; gap:6px; margin:0 0 16px; padding:4px; border-radius:14px; background:var(--accent-soft);}
+.gp-sections button{flex:1; font:700 13px/1 system-ui,sans-serif; padding:10px 8px; border-radius:10px; border:0; background:transparent; color:var(--muted); cursor:pointer;}
+.gp-sections button.on{background:var(--card); color:var(--accent); box-shadow:0 1px 3px rgba(40,20,60,.12);}
+.gp-sections button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+/* scratch + confetti */
+.scratch{border-radius:16px; padding:22px 16px; text-align:center; background:repeating-linear-gradient(45deg,#cdbfdb 0 10px,#bfb0cf 10px 20px); margin:12px 0;}
+.scratch .revealed{background:#fdf3d7; border-radius:12px; padding:16px 12px;}
+.scratch h3{margin:0 0 4px; font-size:17px;}
+.confetti{position:absolute; width:9px; height:9px; border-radius:2px; top:-12px; z-index:30; animation:drop 1.15s ease-in forwards;}
+@keyframes drop{to{transform:translateY(820px) rotate(560deg); opacity:.1;}}
+
+/* guide panel */
+.guide-panel{width:330px; max-height:788px; overflow-y:auto; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 18px 14px;}
+.gp-eyebrow{font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 4px;}
+.guide-panel h3{margin:0 0 4px; font-size:17px;}
+.gp-meta{font-size:13px; color:var(--muted); margin:0 0 14px;}
+.guide-list{list-style:none; margin:0; padding:0;}
+.guide-list li{border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin:0 0 8px; font-size:13.5px; cursor:pointer; display:flex; gap:10px; align-items:center;}
+.guide-list li.go-next{border-color:var(--accent); background:var(--accent-soft); font-weight:700;}
+.guide-list li .num{flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:var(--accent); color:var(--bg); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;}
+.guide-list li.end{cursor:default; border-style:dashed; color:var(--muted); font-weight:600;}
+.gp-also{font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:12px 0 7px;}
+
+/* gallery */
+.gallery-section h2{font-size:21px; margin:0 0 4px;}
+.gallery-sub{color:var(--muted); margin:0 0 26px; max-width:64ch;}
+.gallery{display:flex; flex-direction:column; gap:56px; margin:0 auto;}
+.gallery .row{display:flex; justify-content:center; align-items:flex-start; gap:44px;}
+.phone-cell{flex:0 0 auto;}
+.caption-cell{flex:0 1 380px; max-width:380px; min-width:0; padding-top:18px;}
+.caption-cell h3{margin:0 0 6px; font-size:17px;}
+.caption-cell p{margin:0 0 10px; color:var(--muted); font-size:14px;}
+.gallery .phone{box-shadow:0 10px 30px rgba(20,8,30,.16);}
+.gallery-shot{position:absolute; inset:0; display:flex; flex-direction:column; background:#f8f4fb; color:#251d2b;}
+
+@media screen and (max-width:820px){
+  html,body{overflow-x:hidden;}
+  .doc{padding-block:16px 56px; max-width:100%;}
+  .doc > *:not(.demo-player-section){display:none !important;}
+  .demo-player-stage{flex-direction:column; align-items:center;}
+  .phone{width:min(392px, calc(100vw - 40px)); height:min(788px, 185vw);}
+  .guide-panel{width:100%; max-width:352px; max-height:none; overflow-y:visible;}
+}
+@media print{
+  .pdf-note{display:block;}
+  .demo-player-counter{display:none !important;}
+  .gallery .row{break-inside:avoid; page-break-inside:avoid;}
+}
+</style>
+
+<div class="doc">
+  <h1>Maya's Smooth by Summer journey with Lumea</h1>
+  <p class="lede">A clickable prototype of the Philips Lumea completion campaign. Follow the numbered step in the panel, or tap straight on the phone.</p>
+  <p class="brandnote">A Nudj pitch prototype skinned for Philips Lumea; the final surfaces would use Philips' own design system. The plan follows Lumea's published rhythm: 4 sessions two weeks apart, then touch-ups every 4 weeks. Screens are tagged with what Nudj has today, and anything net-new is marked Concept.</p>
+  <div class="legend">
+    <span class="pill have">Have it, built in Nudj, re-skin only</span>
+    <span class="pill half">Half-built, engine exists, new render</span>
+    <span class="pill net">Concept, net-new</span>
+  </div>
+
+  <section class="demo-player-section">
+    <div class="pdf-note">This PDF is not clickable, open the HTML file to tap through the journey.</div>
+    <div class="demo-player-stage">
+      <div class="phone phone-player">
+        <div class="phone-screen" id="demo-player-phone"></div>
+      </div>
+      <aside class="guide-panel" id="guide-panel"></aside>
+    </div>
+    <div class="demo-player-counter" id="demo-player-counter"></div>
+  </section>
+
+  <section class="gallery-section">
+    <h2>Every screen, with what it takes to build</h2>
+    <p class="gallery-sub">The same screens as the player, laid out for review and PDF export. Status pills map each surface to the Nudj platform today.</p>
+    <div class="gallery" id="gallery"></div>
+  </section>
+</div>
+
+<div id="screen-deck">
+
+  <!-- home = star calendar -->
+  <div class="screen-state" id="screen-home">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar"><span class="wordmark">PHILIPS</span><span class="lumea">Lumea</span><span class="hello">Hey Maya 👋</span></div>
+    <div class="app">
+      <div class="progressline"><div class="bar"><i style="width:29%;"></i></div><b>2 of 7 ★</b></div>
+      <p class="planline">Maya's plan: every other Sunday after your shower, legs and underarms, smooth by Sun 14 Jun</p>
+      <div class="card fwidget tapcard" data-target="screen-education">
+        <div class="fcirc">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#f7eefc"/><rect y="55" width="100" height="45" fill="#f0d6bd"/><line x1="0" y1="55" x2="100" y2="55" stroke="#d9b896" stroke-width="1.5"/><g stroke="#7a5c45" stroke-width="1.8" stroke-linecap="round" fill="none"><path d="M30 80 L30 55 C30 48 32 44 30 40"/><path d="M50 82 L50 55 C50 47 48 42 50 37"/><path d="M70 80 L70 55 C70 49 72 45 70 42"/></g><g fill="#9c8270"><ellipse cx="30" cy="84" rx="4" ry="5"/><ellipse cx="50" cy="86" rx="4" ry="5"/><ellipse cx="70" cy="84" rx="4" ry="5"/></g></svg>
+          <span class="info">i</span>
+        </div>
+        <div style="min-width:0;">
+          <span class="you">Your hair right now</span>
+          <h3>Growing back finer</h3>
+          <p>Two weeks after session 1, the hairs that come back are thinner and lighter. Tonight's flash catches the next batch.</p>
+        </div>
+      </div>
+      <div class="monthhead"><b>March</b><span>Intensive phase, every 2 weeks</span></div>
+      <div class="cal">
+        <div class="dh">S</div><div class="dh">M</div><div class="dh">T</div><div class="dh">W</div><div class="dh">T</div><div class="dh">F</div><div class="dh">S</div>
+        <div class="d plain">1</div><div class="d plain">2</div><div class="d plain">3</div><div class="d plain">4</div><div class="d plain">5</div><div class="d plain">6</div><div class="d earned"><b>7</b>★</div>
+        <div class="d earned"><b>8</b>★</div><div class="d plain">9</div><div class="d plain">10</div><div class="d plain">11</div><div class="d plain">12</div><div class="d plain">13</div><div class="d plain">14</div>
+        <div class="d plain">15</div><div class="d plain">16</div><div class="d plain">17</div><div class="d plain">18</div><div class="d plain">19</div><div class="d plain">20</div><div class="d plain">21</div>
+        <div class="d today"><b>22</b>★</div><div class="d plain">23</div><div class="d plain">24</div><div class="d plain">25</div><div class="d plain">26</div><div class="d plain">27</div><div class="d plain">28</div>
+        <div class="d plain">29</div><div class="d plain">30</div><div class="d plain">31</div><div class="d blank"></div><div class="d blank"></div><div class="d blank"></div><div class="d blank"></div>
+      </div>
+      <div class="nextstars">
+        <span><i>★</i>5 Apr</span><span><i>★</i>19 Apr</span><span><i>★</i>17 May<br>touch-up</span><span><i>★</i>14 Jun<br>finish</span>
+      </div>
+      <div class="todaycard tapcard" data-target="screen-starpop">
+        <span class="today-ico">⚡</span>
+        <div><h3>Tonight's a star day</h3><p>Session 2, legs and underarms.</p></div>
+      </div>
+      <div class="card tapcard" data-target="screen-timeline"><h3>My progress 📸</h3><p>Your leg timeline and the two-week close-up compare.</p></div>
+      <div class="card tapcard" data-target="screen-replan"><h3>Miss a Sunday?</h3><p>No broken streaks here. We just replan.</p></div>
+      <div class="card tapcard" data-target="screen-reminder"><h3>Your reminder</h3><p>Every other Sunday at 7:30pm. Tap to preview it.</p></div>
+    </div>
+    <div class="bottomnav">
+      <div class="tab on"><span class="ico">⌂</span>Home</div>
+      <div class="tab" data-target="screen-timeline"><span class="ico">📸</span>Progress</div>
+      <div class="tab" data-target="screen-rewards"><span class="ico">🎁</span>Rewards</div>
+      <div class="tab" data-inert><span class="ico">◯</span>Profile</div>
+    </div>
+  </div>
+
+  <!-- rewards tab -->
+  <div class="screen-state" id="screen-rewards">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar"><h2>Rewards</h2></div>
+    <div class="app">
+      <div class="lcard">
+        <div class="lc-head"><b>Smooth by Summer card</b><span>2 of 7</span></div>
+        <div class="slots"><div class="slot on"><span>★</span></div><div class="slot on"><span>★</span></div><div class="slot prize"><span>3</span><em>🎁</em></div><div class="slot"><span>4</span></div><div class="slot prize"><span>5</span><em>🎁</em></div><div class="slot"><span>6</span></div><div class="slot big prize"><span>★</span><small>Star 7, finish</small><em>🎁</em></div></div>
+        <div class="lc-foot">🎁 Prizes at stars 3, 5 and 7</div>
+      </div>
+      <h3 style="font-size:15px; margin:4px 0 8px;">Your prizes</h3>
+      <div class="rcard next">
+        <div class="rfoil gift"><b>3</b><span>👝</span></div>
+        <div><h3>Lumea travel pouch</h3><p>Star 3, unlocks tonight after session 2.</p></div>
+      </div>
+      <div class="rcard">
+        <div class="rfoil gift"><b>5</b><span>%</span></div>
+        <div><h3>15% off Philips Beauty</h3><p>Star 5, 3 stars to go. Your intensive phase ends here.</p></div>
+      </div>
+      <div class="rcard finish tapcard" data-target="screen-complete">
+        <div class="rfoil big"><b>7</b><span>★</span></div>
+        <div><h3>Finish prize, a scratch card</h3><p>Star 7, Sun 14 Jun. <u>Preview the finish ›</u></p></div>
+      </div>
+      <div class="card tapcard" data-target="screen-campaign"><h3>How Smooth by Summer works ›</h3><p>The plan, the stars and the rules.</p></div>
+    </div>
+    <div class="bottomnav">
+      <div class="tab" data-target="screen-home"><span class="ico">⌂</span>Home</div>
+      <div class="tab" data-target="screen-timeline"><span class="ico">📸</span>Progress</div>
+      <div class="tab on"><span class="ico">🎁</span>Rewards</div>
+      <div class="tab" data-inert><span class="ico">◯</span>Profile</div>
+    </div>
+  </div>
+
+  <!-- campaign landing (start) -->
+  <div class="screen-state" id="screen-campaign">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar"><span class="wordmark">PHILIPS</span><span class="lumea">Lumea</span><div class="backbtn" style="margin-left:auto;" data-target="screen-home"><svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></div></div>
+    <div class="app">
+      <p class="eyebrow center" style="margin-top:16px;">Smooth by Summer, starts Sat 7 Mar</p>
+      <p class="h-title center">The Smooth Journey</p>
+      <p class="sub center">A 14-week plan with your Lumea. Show up on star days, collect the proof, be smooth by June.</p>
+      <div class="card"><h3>7 stars to collect</h3><p>Setup, then 4 intensive sessions two weeks apart, then 2 touch-ups four weeks apart.</p></div>
+      <div class="card"><h3>Prizes at stars 3, 5 and 7</h3><p>A Lumea travel pouch at star 3, 15% off Philips Beauty at star 5, and your completion prize at star 7. Named up front, no mystery boxes.</p></div>
+      <div class="card"><h3>Finish all 7</h3><p>Your completion prize, and your results guarantee is fulfilled. Your photo journey is the proof.</p></div>
+      <div class="cta" data-target="screen-goal">Count me in ⚡</div>
+      <p class="tagline">Runs right here in the Philips Lumea app, nothing to download.</p>
+    </div>
+  </div>
+
+  <!-- onboarding 1: goal -->
+  <div class="screen-state" id="screen-goal">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-campaign"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="dots"><i class="on"></i><i></i><i></i><i></i></div><span class="spacer"></span>
+    </div>
+    <div class="app onb">
+      <p class="eyebrow">Your goal</p>
+      <p class="h-title">What brings you to Lumea?</p>
+      <p class="sub">Your plan and your tips adapt to your answer.</p>
+      <div class="card tapcard" data-target="screen-quiz"><h3>Smooth skin</h3><p>Long-term hair reduction, much less shaving.</p></div>
+      <div class="card tapcard" data-target="screen-quiz"><h3>Ingrown &amp; razor-bump relief</h3><p>Deal with the cause of bumps at the follicle.</p></div>
+      <div class="card tapcard" data-target="screen-quiz"><h3>Managing hormonal hair</h3><p>PCOS or hormonal regrowth, we plan for touch-ups too.</p></div>
+      <p class="tagline" style="margin-top:auto;">Tap a goal, swipe to slide through setup</p>
+    </div>
+  </div>
+
+  <!-- onboarding 2: skin & hair -->
+  <div class="screen-state" id="screen-quiz">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-goal"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="dots"><i></i><i class="on"></i><i></i><i></i></div><span class="spacer"></span>
+    </div>
+    <div class="app onb">
+      <p class="eyebrow">Skin &amp; hair</p>
+      <p class="h-title">Let's check Lumea suits you</p>
+      <p class="sub">This is a safety check as well as personalisation. <span class="concept-tag">AI photo analysis, Concept</span></p>
+      <div class="card">
+        <h3>Skin tone</h3>
+        <div class="swatches">
+          <div class="sw" style="background:#f4dcc9;"></div>
+          <div class="sw" style="background:#eccab0;"></div>
+          <div class="sw sel" style="background:#dfae8a;"></div>
+          <div class="sw" style="background:#b97f57;"></div>
+          <div class="sw no" style="background:#8a5a3b;"></div>
+          <div class="sw no" style="background:#5b3a26;"></div>
+        </div>
+        <p class="swnote">IPL needs contrast between skin and hair. For the two deepest tones we'll tell you honestly that it isn't safe for you.</p>
+      </div>
+      <div class="card">
+        <h3>Hair colour</h3>
+        <div class="chips"><span class="chip sel">Dark brown</span><span class="chip">Black</span><span class="chip">Light brown</span><span class="chip">Blonde / red / grey</span></div>
+      </div>
+      <div class="card">
+        <h3>Areas</h3>
+        <div class="chips"><span class="chip sel">Legs</span><span class="chip sel">Underarms</span><span class="chip">Arms</span><span class="chip">Face</span></div>
+      </div>
+      <div class="cta" data-target="screen-photo">Continue</div>
+    </div>
+  </div>
+
+  <!-- onboarding 3: before photos -->
+  <div class="screen-state" id="screen-photo">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-quiz"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="dots"><i></i><i></i><i class="on"></i><i></i></div><span class="spacer"></span>
+    </div>
+    <div class="app onb">
+      <p class="eyebrow">Day 1</p>
+      <p class="h-title">Your before photos</p>
+      <p class="sub">Progress is too gradual to see in the mirror. Line up with the outlines and we'll do the comparing.</p>
+      <div class="vf-pair">
+        <div class="vf">
+          <span class="vf-lbl">1 Whole leg</span>
+          <svg class="stencil" viewBox="0 0 140 250" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <path d="M48 30 C44 76 50 110 54 126 C48 148 48 172 58 208 L58 218 C58 226 100 227 104 220 C106 214 86 210 76 206 C84 170 90 146 86 126 C94 98 102 66 98 30 Z" fill="none" stroke="#ffd75e" stroke-width="2" stroke-dasharray="5 4"/>
+            <circle cx="72" cy="104" r="8" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3"/>
+          </svg>
+          <span class="vf-hint">Fit your leg in the outline</span>
+          <span class="shutter"></span>
+        </div>
+        <div class="vf">
+          <span class="vf-lbl">2 Close-up</span>
+          <div class="closeup" style="background:#3a2f44; border-color:#fff;"></div>
+          <span class="vf-hint">The white circle on your leg, just above the knee</span>
+          <span class="shutter"></span>
+        </div>
+      </div>
+      <p class="tagline" style="margin-top:0;">Private by default. Nothing is shared unless you choose.</p>
+      <div class="cta" data-target="screen-ritual">Take my before photos</div>
+    </div>
+  </div>
+
+  <!-- onboarding 4: ritual -->
+  <div class="screen-state" id="screen-ritual">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-photo"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <div class="dots"><i></i><i></i><i></i><i class="on"></i></div><span class="spacer"></span>
+    </div>
+    <div class="app onb">
+      <p class="eyebrow">Your ritual</p>
+      <p class="h-title">When will sessions happen?</p>
+      <p class="sub">Lumea works in a two-week rhythm. Tie it to something you already do and we'll only nudge you then.</p>
+      <div class="card">
+        <h3>Your day, every other week</h3>
+        <div class="chips"><span class="chip">Mon</span><span class="chip">Tue</span><span class="chip">Wed</span><span class="chip">Thu</span><span class="chip">Fri</span><span class="chip">Sat</span><span class="chip sel">Sun</span></div>
+      </div>
+      <div class="card">
+        <h3>Anchor</h3>
+        <div class="chips"><span class="chip sel">After my shower</span><span class="chip">Before bed</span><span class="chip">Morning</span></div>
+      </div>
+      <div class="card">
+        <h3>Reminder</h3>
+        <div class="chips"><span class="chip sel">7:30pm</span><span class="chip">8:30pm</span><span class="chip">9:30pm</span></div>
+      </div>
+      <div class="cta" data-target="screen-plan">Build my plan</div>
+    </div>
+  </div>
+
+  <!-- plan reveal -->
+  <div class="screen-state" id="screen-plan">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-ritual"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Your plan</h2>
+    </div>
+    <div class="app">
+      <div class="lcard">
+        <div class="lc-head"><b>Smooth by Summer card</b><span>1 of 7</span></div>
+        <div class="slots"><div class="slot on"><span>★</span></div><div class="slot"><span>2</span></div><div class="slot prize"><span>3</span><em>🎁</em></div><div class="slot"><span>4</span></div><div class="slot prize"><span>5</span><em>🎁</em></div><div class="slot"><span>6</span></div><div class="slot big prize"><span>★</span><small>Star 7, finish</small><em>🎁</em></div></div>
+        <div class="lc-foot">🎁 Prizes at stars 3, 5 and 7</div>
+      </div>
+      <p class="h-title center">Star 1 is already yours</p>
+      <p class="sub center">Setting up counts. You're 1 of 7, not 0 of 7, and your first prize is two stars away.</p>
+      <div class="card">
+        <span class="you">Built from your quiz</span>
+        <h3>Maya's plan</h3>
+        <p>Skin test tonight. Session 1 tomorrow, then every other Sunday for 4 sessions, then 2 touch-ups four weeks apart. Smooth by <b>Sun 14 Jun</b>.</p>
+        <div class="progressline" style="margin-top:10px;"><div class="bar"><i style="width:14%;"></i></div><b>1 of 7 ★</b></div>
+      </div>
+      <div class="card">
+        <h3>Why this rhythm, for you?</h3>
+        <p>Hair grows in cycles, and IPL only works on the hairs that are actively growing. Two weeks apart lets the next batch come through. Your dark hair on medium skin responds well, so you're on the standard plan with no extra sessions.</p>
+      </div>
+      <div class="cta" data-target="screen-home">See my star calendar</div>
+    </div>
+  </div>
+
+  <!-- star-day pop-up -->
+  <div class="screen-state" id="screen-starpop" style="background:#2a1f36;">
+    <div class="statusbar" style="color:#fdfbff;"><span>7:31</span><span>●●●</span></div>
+    <div class="sheetdim">
+      <div class="backbtn light" data-target="screen-home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+    </div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <p class="eyebrow">Star day, session 2</p>
+      <p class="h-title">Where your hair's at</p>
+      <span class="you">Maya's stage, star 3 of 7, legs and underarms</span>
+      <svg class="follicle" viewBox="0 0 300 132" role="img" aria-label="A hair and its follicle below the skin surface">
+        <rect x="0" y="52" width="300" height="80" rx="12" fill="#f0d6bd"/>
+        <line x1="0" y1="52" x2="300" y2="52" stroke="#d9b896" stroke-width="2"/>
+        <path d="M150 8 C 146 26, 153 38, 150 52 L150 94" stroke="#4a3626" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="150" cy="102" rx="11" ry="14" fill="#4a3626"/>
+        <ellipse cx="150" cy="105" rx="6" ry="8" fill="#8a5a3b"/>
+        <path d="M118 12 L132 24 L122 26 L136 40" stroke="#d99a06" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+        <text x="112" y="10" font-size="10" fill="#8f8699" text-anchor="end">tonight's flash</text>
+        <text x="168" y="106" font-size="10" fill="#8f8699">the follicle, still alive down here</text>
+        <text x="10" y="46" font-size="10" fill="#8f8699">your skin</text>
+      </svg>
+      <div class="stagebar"><span class="stg on">1 Chop</span><span class="stg">2 Weaken</span><span class="stg">3 Gone</span></div>
+      <p class="sub">You're just starting. Tonight's flash hits the hair at the root, but the follicle underneath is still alive. That's why the next stars are on your calendar.</p>
+      <div class="cta" data-target="screen-session">Let's zap ⚡</div>
+      <div class="skiplink" data-target="screen-session">Skip the science, straight to my session</div>
+    </div>
+  </div>
+
+  <!-- reminder -->
+  <div class="screen-state" id="screen-reminder">
+    <div class="statusbar" style="color:#fdfbff;"><span>19:30</span><span>●●●</span></div>
+    <div class="appbar" style="position:absolute; z-index:5;">
+      <div class="backbtn light" data-target="screen-home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+    </div>
+    <div class="lockwrap">
+      <p class="locktime">19:30</p>
+      <p class="lockdate">Sunday 22 March</p>
+      <div class="notif" data-target="screen-starpop">
+        <div class="nh"><span class="dot">L</span>PHILIPS LUMEA, now</div>
+        <h3>Star day, session 2</h3>
+        <p>The hairs that were resting two weeks ago are growing now, and tonight's flash catches them. After your shower, as planned.</p>
+      </div>
+      <p class="locknote">One nudge on star days, every other Sunday. Nothing in between.</p>
+    </div>
+  </div>
+
+  <!-- session -->
+  <div class="screen-state" id="screen-session">
+    <div class="statusbar"><span>19:36</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-starpop"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Session 2</h2>
+    </div>
+    <div class="app">
+      <div class="card">
+        <span class="you">Remembered from session 1</span>
+        <h3>Your settings</h3>
+        <div class="levels"><span class="area">Legs</span><div class="lv">1</div><div class="lv">2</div><div class="lv">3</div><div class="lv sel">4</div><div class="lv">5</div></div>
+        <div class="levels"><span class="area">Underarms</span><div class="lv">1</div><div class="lv">2</div><div class="lv sel">3</div><div class="lv">4</div><div class="lv">5</div></div>
+        <p style="margin-top:8px;">Use the highest setting that feels comfortable. Turning it down feels gentler, but it weakens your results.</p>
+      </div>
+      <div class="card">
+        <h3>Quick checklist</h3>
+        <div class="check"><span class="tick">✓</span><span>Shave first. IPL works on the root, not the hair above the skin.</span></div>
+        <div class="check"><span class="tick">✓</span><span>Clean, dry skin with no lotion.</span></div>
+        <div class="check"><span class="tick">✓</span><span>Body attachment for legs, with Slide and Flash for speed.</span></div>
+        <div class="check"><span class="tick">✓</span><span>Switch to the underarm attachment for underarms.</span></div>
+      </div>
+      <div class="cta" data-target="screen-capture">Done, take tonight's photos</div>
+    </div>
+  </div>
+
+  <!-- capture -->
+  <div class="screen-state" id="screen-capture">
+    <div class="statusbar"><span>19:52</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-session"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Tonight's photos</h2>
+    </div>
+    <div class="app">
+      <p class="sub" style="margin-top:4px;">Same leg, same spot. The faint shape is your last photo, so tonight's lines up with it. <span class="concept-tag">Ghost overlay, Concept</span></p>
+      <div class="vf-pair">
+        <div class="vf">
+          <span class="vf-lbl">1 Whole leg</span>
+          <span class="ok">Lined up ✓</span>
+          <svg class="stencil" viewBox="0 0 140 250" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <path d="M48 30 C44 76 50 110 54 126 C48 148 48 172 58 208 L58 218 C58 226 100 227 104 220 C106 214 86 210 76 206 C84 170 90 146 86 126 C94 98 102 66 98 30 Z" fill="#e3b590"/>
+            <path d="M46 28 C42 76 48 110 52 126 C46 148 46 172 56 208 L56 218 C56 226 98 227 102 220 C104 214 84 210 74 206 C82 170 88 146 84 126 C92 98 100 66 96 30 Z" fill="#fff" fill-opacity=".22"/>
+            <path d="M48 30 C44 76 50 110 54 126 C48 148 48 172 58 208 L58 218 C58 226 100 227 104 220 C106 214 86 210 76 206 C84 170 90 146 86 126 C94 98 102 66 98 30 Z" fill="none" stroke="#ffd75e" stroke-width="2" stroke-dasharray="5 4"/>
+            <circle cx="72" cy="104" r="8" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3"/>
+          </svg>
+          <span class="shutter"></span>
+        </div>
+        <div class="vf">
+          <span class="vf-lbl">2 Close-up</span>
+          <div class="closeup"><div class="hairs med"></div><div class="ghost"><div class="hairs dense"></div></div></div>
+          <span class="vf-hint">Last photo shown faintly underneath</span>
+          <span class="shutter"></span>
+        </div>
+      </div>
+      <div class="cta" data-target="screen-star">Save photos, claim my star</div>
+    </div>
+  </div>
+
+  <!-- star earned -->
+  <div class="screen-state" id="screen-star">
+    <div class="statusbar"><span>19:53</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Star earned</h2>
+    </div>
+    <div class="app">
+      <div class="lcard">
+        <div class="lc-head"><b>Smooth by Summer card</b><span>3 of 7</span></div>
+        <div class="slots"><div class="slot on"><span>★</span></div><div class="slot on"><span>★</span></div><div class="slot on prize"><span>★</span><em>🎁</em></div><div class="slot"><span>4</span></div><div class="slot prize"><span>5</span><em>🎁</em></div><div class="slot"><span>6</span></div><div class="slot big prize"><span>★</span><small>Star 7, finish</small><em>🎁</em></div></div>
+        <div class="lc-foot">🎁 Prizes at stars 3, 5 and 7</div>
+      </div>
+      <p class="h-title center">Nice one, Maya! 3 of 7</p>
+      <p class="ptsline">+<span class="count-up" data-to="50">0</span> pts</p>
+      <p class="sub center">Photos added to your timeline. Next star: Sun 5 Apr, after your shower. Your follicles need those two weeks off.</p>
+      <div class="card" style="border-color:#e8c96a; background:#fffaf0;"><h3>🎁 Star 3 prize unlocked</h3><p>A Lumea travel pouch is on its way. Next prize at star 5: 15% off Philips Beauty.</p></div>
+      <div class="cta" data-target="screen-timeline">See my progress</div>
+      <div class="cta sub" data-target="screen-home">Back to my calendar</div>
+    </div>
+  </div>
+
+  <!-- replan -->
+  <div class="screen-state" id="screen-replan">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Missed a Sunday?</h2>
+    </div>
+    <div class="app">
+      <p class="eyebrow">No broken streaks</p>
+      <p class="h-title">Life happens. We replan.</p>
+      <p class="sub">Miss a session and nothing turns red. Your next stars move to keep the two-week gap, and your finish date shifts, so you can see what it cost.</p>
+      <div class="card">
+        <h3>What you'd see</h3>
+        <p style="margin-bottom:8px;">Missed Sun 22 Mar, so session 2 moves to Wed 25 Mar and the rest follow.</p>
+        <p><b>Smooth by: 14 Jun → 17 Jun</b> (+3 days)</p>
+      </div>
+      <div class="card">
+        <h3>If a few get missed</h3>
+        <p>Your journey shifts to "drifting" and we check in, gently, with your own progress photo.</p>
+      </div>
+      <div class="card tapcard" data-target="screen-winback">
+        <h3>See the check-in</h3>
+        <p>The win-back nudge, where your own photo does the persuading.</p>
+      </div>
+      <div class="cta sub" data-target="screen-home">Back to my calendar</div>
+    </div>
+  </div>
+
+  <!-- winback -->
+  <div class="screen-state" id="screen-winback">
+    <div class="statusbar" style="color:#fdfbff;"><span>19:30</span><span>●●●</span></div>
+    <div class="appbar" style="position:absolute; z-index:5;">
+      <div class="backbtn light" data-target="screen-replan"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+    </div>
+    <div class="lockwrap">
+      <p class="locktime">19:30</p>
+      <p class="lockdate">Sunday 26 April</p>
+      <div class="notif" data-target="screen-home">
+        <div class="nh"><span class="dot">L</span>PHILIPS LUMEA, a week quiet</div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div class="mini"><div class="hairs sparse"></div></div>
+          <div style="min-width:0;">
+            <h3>Maya, you're so close to smooth skin</h3>
+            <p>4 of 7 stars, and this is your leg at session 3. One more session and your intensive phase is done. New finish: Sun 21 Jun.</p>
+          </div>
+        </div>
+      </div>
+      <p class="locknote">Recalculated each time: her latest photo, her goal, her new finish date.</p>
+    </div>
+  </div>
+
+  <!-- timeline -->
+  <div class="screen-state" id="screen-timeline">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>My progress</h2>
+    </div>
+    <div class="app">
+      <p class="eyebrow">Preview, after session 4</p>
+      <p class="h-title">You're collecting proof</p>
+      <div class="card">
+        <span class="you">Maya's close-ups, legs</span>
+        <h3>Two weeks ago vs tonight</h3>
+        <div class="shot-pair">
+          <div class="shot"><div class="hairs sparse"></div><span class="lbl">Session 3</span></div>
+          <div class="shot"><div class="hairs faint"></div><span class="lbl">Session 4</span></div>
+        </div>
+        <p>Finer, lighter, fewer. The close-up shows change before the mirror does.</p>
+      </div>
+      <h3 style="font-size:15px; margin:14px 0 2px;">Your journey, smooth by 14 Jun</h3>
+      <div class="strip">
+        <div class="frame"><div class="hairs dense"></div><span class="wk">S1</span></div>
+        <div class="frame"><div class="hairs med"></div><span class="wk">S2</span></div>
+        <div class="frame"><div class="hairs sparse"></div><span class="wk">S3</span></div>
+        <div class="frame"><div class="hairs faint"></div><span class="wk">S4</span></div>
+        <div class="frame empty">Touch-up<br>17 May</div>
+        <div class="frame empty">Finish<br>14 Jun</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- education -->
+  <div class="screen-state" id="screen-education">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-home"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Under your skin</h2>
+    </div>
+    <div class="app">
+      <p class="eyebrow">How your hair changes</p>
+      <p class="h-title">From full hair to smooth, in four stages</p>
+      <div class="stages">
+        <div class="stage">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#f7eefc"/><rect y="55" width="100" height="45" fill="#f0d6bd"/><line x1="0" y1="55" x2="100" y2="55" stroke="#d9b896" stroke-width="1.5"/><g stroke="#3e2c20" stroke-width="3" stroke-linecap="round" fill="none"><path d="M30 80 L30 55 C29 40 33 28 28 14"/><path d="M50 82 L50 55 C51 40 47 26 52 12"/><path d="M70 80 L70 55 C69 42 73 30 68 18"/></g><g fill="#3e2c20"><ellipse cx="30" cy="84" rx="5" ry="6"/><ellipse cx="50" cy="86" rx="5" ry="6"/><ellipse cx="70" cy="84" rx="5" ry="6"/></g></svg>
+          <b>Before</b><span>Full hair</span>
+        </div>
+        <div class="stage">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#f7eefc"/><rect y="55" width="100" height="45" fill="#f0d6bd"/><line x1="0" y1="55" x2="100" y2="55" stroke="#d9b896" stroke-width="1.5"/><g stroke="#6b5446" stroke-width="3" stroke-linecap="round"><line x1="30" y1="80" x2="30" y2="56"/><line x1="50" y1="82" x2="50" y2="56"/><line x1="70" y1="80" x2="70" y2="56"/></g><g fill="#b8a08a"><ellipse cx="30" cy="84" rx="5" ry="6"/><ellipse cx="50" cy="86" rx="5" ry="6"/><ellipse cx="70" cy="84" rx="5" ry="6"/></g><g stroke="#d99a06" stroke-width="2.5" fill="none" stroke-linejoin="round"><path d="M26 30 L33 38 L27 40 L34 48"/><path d="M46 26 L53 34 L47 36 L54 44"/><path d="M66 30 L73 38 L67 40 L74 48"/></g></svg>
+          <b>Shave + flash</b><span>Gone at the surface</span>
+        </div>
+        <div class="stage now">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#f7eefc"/><rect y="55" width="100" height="45" fill="#f0d6bd"/><line x1="0" y1="55" x2="100" y2="55" stroke="#d9b896" stroke-width="1.5"/><g stroke="#7a5c45" stroke-width="1.8" stroke-linecap="round" fill="none"><path d="M30 80 L30 55 C30 48 32 44 30 40"/><path d="M50 82 L50 55 C50 47 48 42 50 37"/><path d="M70 80 L70 55 C70 49 72 45 70 42"/></g><g fill="#9c8270"><ellipse cx="30" cy="84" rx="4" ry="5"/><ellipse cx="50" cy="86" rx="4" ry="5"/><ellipse cx="70" cy="84" rx="4" ry="5"/></g></svg>
+          <b>You're here</b><span>Grows back finer</span>
+        </div>
+        <div class="stage">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#f7eefc"/><rect y="55" width="100" height="45" fill="#f0d6bd"/><line x1="0" y1="55" x2="100" y2="55" stroke="#d9b896" stroke-width="1.5"/><path d="M50 82 L50 55 C50 52 51 50 50 48" stroke="#a88d78" stroke-width="1.2" stroke-linecap="round" fill="none"/><g fill="#d8bfa6"><ellipse cx="30" cy="84" rx="3" ry="3.5"/><ellipse cx="50" cy="86" rx="3" ry="3.5"/><ellipse cx="70" cy="84" rx="3" ry="3.5"/></g></svg>
+          <b>After 6</b><span>Mostly gone</span>
+        </div>
+      </div>
+      <span class="you">Sent because it's 2 weeks since your first session</span>
+      <div class="card">
+        <h3>Looking worse? That's shedding.</h3>
+        <p>Treated hairs don't vanish at the flash. They die at the root and fall out over the next 1 to 3 weeks, which can look like regrowth. It isn't.</p>
+      </div>
+      <div class="card">
+        <h3>Why the two-week gaps</h3>
+        <p>Only hairs that are actively growing can be switched off, and only some of them grow at any one time. Each session catches the next batch, which is why each regrowth comes back finer and sparser.</p>
+      </div>
+      <div class="cta sub" data-target="screen-home">Got it, back to my calendar</div>
+    </div>
+  </div>
+
+  <!-- complete -->
+  <div class="screen-state" id="screen-complete">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-rewards"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Journey complete</h2>
+    </div>
+    <div class="app">
+      <p class="eyebrow">Preview, Sun 14 Jun</p>
+      <p class="h-title">7 of 7. Smooth by summer.</p>
+      <div class="card">
+        <h3>Before and after</h3>
+        <div class="shot-pair">
+          <div class="shot"><div class="hairs dense"></div><span class="lbl">Session 1</span></div>
+          <div class="shot"><div class="hairs faint"></div><span class="lbl">Session 6</span></div>
+        </div>
+        <p>Built automatically from the photos you took.</p>
+      </div>
+      <div class="strip">
+        <div class="frame"><div class="hairs dense"></div><span class="wk">S1</span></div>
+        <div class="frame"><div class="hairs med"></div><span class="wk">S2</span></div>
+        <div class="frame"><div class="hairs sparse"></div><span class="wk">S3</span></div>
+        <div class="frame"><div class="hairs faint"></div><span class="wk">S4</span></div>
+        <div class="frame"><div class="hairs faint"></div><span class="wk">S5</span></div>
+        <div class="frame"><div class="hairs faint" style="opacity:.6;"></div><span class="wk">S6</span></div>
+      </div>
+      <div class="cta" data-target="screen-prize">Scratch your completion prize</div>
+    </div>
+  </div>
+
+  <!-- prize -->
+  <div class="screen-state" id="screen-prize" data-terminal-reason="earned">
+    <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+    <div class="appbar">
+      <div class="backbtn" data-target="screen-complete"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+      <h2>Your prize</h2>
+    </div>
+    <div class="app">
+      <p class="h-title center" style="margin-top:14px;">Your finish prize</p>
+      <p class="sub center">Drag across the foil with your finger.</p>
+      <div class="scratchcard big" data-label="✨ Scratch your finish prize ✨">
+        <div class="reveal"><div class="rv-ico">🏆</div><h3>An extra year of warranty, plus 20% off Philips Beauty</h3><p>You completed all 6 documented sessions, so your results guarantee is fulfilled too.</p></div>
+        <div class="foil"><span>✨ Scratch your finish prize ✨</span></div>
+      </div>
+      <div class="revealbtn">Presenting? Tap here to reveal</div>
+      <p class="sub center">The only surprise in the whole journey. Saving it for the end keeps it special.</p>
+      <div class="card"><h3>For Philips</h3><p>Completion comes with documented sessions and photos. That means fewer "used it twice" refunds, more people who finish, and better reviews.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var GUIDE = {
+    "screen-home": {name:"Calendar home", meta:"The star calendar is the home screen. Big stars sit on session days every other Sunday, and one tap opens tonight's session.",
+      next:{go:"screen-starpop", label:"Tap tonight's star card"},
+      also:[{go:"screen-education", label:"Tap the (i) on the hair picture"},{go:"screen-timeline", label:"See progress photos"},{go:"screen-replan", label:"What a missed Sunday does"},{go:"screen-reminder", label:"Preview the reminder"},{go:"screen-rewards", label:"Open the Rewards tab"}]},
+    "screen-campaign": {name:"Join the campaign", meta:"Where the demo starts. Smooth by Summer launches as a seasonal campaign inside the Philips Lumea app, and later lives under the Rewards tab.",
+      next:{go:"screen-goal", label:"Count me in, start the setup slides"}, also:[{go:"screen-home", label:"Not now, close to Maya's calendar"}]},
+    "screen-rewards": {name:"Rewards tab", meta:"Her loyalty card and the three prizes, named up front. The finish prize is the one scratch card, and you can preview it from here.",
+      next:{go:"screen-complete", label:"Preview the finish"},
+      also:[{go:"screen-campaign", label:"How Smooth by Summer works"},{go:"screen-home", label:"Back to the calendar"},{go:"screen-timeline", label:"See progress photos"}]},
+    "screen-goal": {name:"Your goal", meta:"One question that shapes the plan copy and every education card.",
+      next:{go:"screen-quiz", label:"Pick a goal, e.g. Smooth skin"}, also:[{go:"screen-campaign", label:"Back to the campaign page"}]},
+    "screen-quiz": {name:"Skin & hair check", meta:"A safety check and personalisation in one. It says so honestly for skin tones where IPL isn't safe.",
+      next:{go:"screen-photo", label:"Continue to before photos"}, also:[{go:"screen-goal", label:"Back to goals"}]},
+    "screen-photo": {name:"Before photos", meta:"Outlines show exactly what to shoot: the whole leg, then a close-up of one marked spot. Every later comparison uses these.",
+      next:{go:"screen-ritual", label:"Take the before photos"}, also:[{go:"screen-quiz", label:"Back to the quiz"}]},
+    "screen-ritual": {name:"Your ritual", meta:"Every other Sunday after the shower, fitting Lumea's two-week rhythm. The reminder time is chosen here.",
+      next:{go:"screen-plan", label:"Build the plan"}, also:[{go:"screen-photo", label:"Back to photos"}]},
+    "screen-plan": {name:"Plan reveal, Star 1", meta:"A 7-star loyalty card with setup already stamped, and prizes marked on stars 3, 5 and 7. Skin test tonight, session 1 tomorrow, smooth by 14 June.",
+      next:{go:"screen-home", label:"Open the star calendar"}, also:[{go:"screen-ritual", label:"Back to ritual"}]},
+    "screen-starpop": {name:"Star-day pop-up", meta:"Every star tap opens a short, skippable look at where her hair is: chop, weaken, gone. The picture changes as she moves through the plan.",
+      next:{go:"screen-session", label:"Let's zap"}, also:[{go:"screen-home", label:"Not now, back to the calendar"}]},
+    "screen-reminder": {name:"Star-day nudge", meta:"The only regular notification. It arrives at her chosen time, every other Sunday, with one line on why tonight matters.",
+      next:{go:"screen-starpop", label:"Open tonight's session"}, also:[{go:"screen-home", label:"Back to calendar"}]},
+    "screen-session": {name:"Guided session", meta:"Settings are remembered for each area, which fixes a top complaint about the current Lumea app, and the device attachments are named for each area.",
+      next:{go:"screen-capture", label:"Finish and take photos"}, also:[{go:"screen-starpop", label:"Back to the pop-up"}]},
+    "screen-capture": {name:"Two-photo capture", meta:"A whole-leg outline and a marked close-up spot, with last session's photo shown faintly so the shots line up.",
+      next:{go:"screen-star", label:"Save photos and claim the star"}, also:[{go:"screen-session", label:"Back to the session"}]},
+    "screen-star": {name:"Star earned", meta:"The reward moment. The loyalty card stamps star 3, which unlocks its prize, and the next prize at star 5 is named up front.",
+      next:{go:"screen-timeline", label:"See the progress timeline"}, also:[{go:"screen-home", label:"Back to calendar"}]},
+    "screen-replan": {name:"Replan, not punish", meta:"A miss moves her next stars to keep the two-week gap, and the finish date visibly shifts.",
+      next:{go:"screen-winback", label:"See the check-in nudge"}, also:[{go:"screen-home", label:"Back to the calendar"}]},
+    "screen-winback": {name:"Win-back nudge", meta:"For users who've gone quiet: \"you're so close to {goal}\", with their own latest photo and new finish date.",
+      next:{go:"screen-home", label:"Pick the journey back up"}, also:[{go:"screen-replan", label:"Back to replanning"}]},
+    "screen-timeline": {name:"Progress timeline", meta:"Six session frames filling toward 14 June, plus the two-week close-up compare where change shows first.",
+      next:{go:"screen-home", label:"Back to the calendar"}, also:[]},
+    "screen-education": {name:"Under your skin", meta:"Opened from the (i) on the hair picture: full hair, gone after shave and flash, growing back finer, mostly gone. The shedding note is timed to two weeks after session 1.",
+      next:{go:"screen-home", label:"Back to the calendar"}, also:[]},
+    "screen-complete": {name:"Journey complete", meta:"All seven stars, an automatic before and after, and the results guarantee fulfilled.",
+      next:{go:"screen-prize", label:"Scratch the completion prize"}, also:[{go:"screen-rewards", label:"Back to Rewards"}]},
+    "screen-prize": {name:"Finish scratch card", meta:"A real scratch card: drag across the foil to reveal the prize. Presenting? Use the reveal link under it.",
+      end:"Journey complete, prize earned.", also:[{go:"screen-complete", label:"Back to the collection"}]}
+  };
+
+  var CAPTIONS = {
+    "screen-campaign": {t:"Campaign landing", d:"Smooth by Summer as a seasonal campaign inside the Lumea app, living under a Rewards tab afterwards. Nudj already has scheduled challenges with start and end dates.", pills:[["Have it","have"]]},
+    "screen-rewards": {t:"Rewards tab", d:"Loyalty card plus the three prizes named up front, with a preview of the finish. Nudj has rewards and milestones; this card layout is new.", pills:[["Have it","have"],["Card view: Half-built","half"]]},
+    "screen-home": {t:"Calendar home", d:"Big stars on session days every other Sunday, plus a round picture of her hair right now with an (i) for more. Nudj's streak engine exists; this view is new.", pills:[["Half-built","half"]]},
+    "screen-goal": {t:"Setup slide 1, goal", d:"A question action. The answer shapes plan copy and education throughout.", pills:[["Have it","have"]]},
+    "screen-quiz": {t:"Setup slide 2, skin & hair", d:"Pick-from-images and list questions, which double as an IPL safety check.", pills:[["Have it","have"],["AI analysis: Concept","net"]]},
+    "screen-photo": {t:"Setup slide 3, before photos", d:"Image uploads with a fixed shape exist in Nudj. The whole-leg outline and marked close-up spot are new camera guides.", pills:[["Have it","have"],["Outlines: Concept","net"]]},
+    "screen-ritual": {t:"Setup slide 4, ritual", d:"Sessions tied to an existing routine and a reminder time, at Lumea's two-week rhythm.", pills:[["Have it","have"]]},
+    "screen-plan": {t:"Plan + Star 1", d:"The plan is built from quiz answers. The loyalty card starts with star 1 stamped, and prizes sit at stars 3, 5 and 7.", pills:[["Half-built","half"]]},
+    "screen-starpop": {t:"Star-day pop-up", d:"A skippable look at her hair's stage (chop, weaken, gone) on every star tap. Education content exists; the pop-up view is new.", pills:[["Half-built","half"]]},
+    "screen-reminder": {t:"Star-day nudge", d:"Triggered by Nudj webhooks and delivered through Philips' own push notifications.", pills:[["Have it","have"]]},
+    "screen-session": {t:"Guided session", d:"Rich-text action content. Settings remembered for each area answer a known Lumea app complaint.", pills:[["Have it","have"]]},
+    "screen-capture": {t:"Two-photo capture", d:"Image uploads exist. Showing the last photo faintly for alignment is new.", pills:[["Have it","have"],["Overlay: Concept","net"]]},
+    "screen-star": {t:"Star earned", d:"Points, achievements and reward distribution work out of the box. The loyalty-card view is a new render.", pills:[["Have it","have"]]},
+    "screen-replan": {t:"Replan on a miss", d:"Scheduling exists. The replan logic and moving finish date are new.", pills:[["Half-built","half"]]},
+    "screen-winback": {t:"Win-back nudge", d:"Streak-at-risk triggers exist. Putting her own photo and new finish date into the message is new.", pills:[["Half-built","half"]]},
+    "screen-timeline": {t:"Progress timeline", d:"Nudj's submission gallery exists. The timeline and two-week compare views are new.", pills:[["Half-built","half"]]},
+    "screen-education": {t:"Under your skin", d:"The four hair stages with 'you're here' marked, plus the shedding note. Rich-text content exists; the stage marker that follows her plan is new.", pills:[["Half-built","half"]]},
+    "screen-complete": {t:"Journey complete", d:"Completion gates exist. The collection and before-and-after views are new.", pills:[["Half-built","half"]]},
+    "screen-prize": {t:"Finish scratch card", d:"Nudj's built-in Scratch game for the star 7 prize, tied to the fulfilled guarantee.", pills:[["Have it","have"]]}
+  };
+
+  var ONBOARDING = ["screen-campaign","screen-goal","screen-quiz","screen-photo","screen-ritual","screen-plan"];
+
+  var deck = document.getElementById("screen-deck");
+  var player = document.getElementById("demo-player-phone");
+  var panel = document.getElementById("guide-panel");
+  var counter = document.getElementById("demo-player-counter");
+  var sources = Array.prototype.slice.call(deck.querySelectorAll(".screen-state"));
+  var order = ONBOARDING.concat(sources.map(function(s){ return s.id; }).filter(function(id){ return ONBOARDING.indexOf(id) < 0; }));
+  var byId = {};
+  sources.forEach(function(src){ byId[src.id] = src; });
+
+  sources.forEach(function(src){
+    var c = src.cloneNode(true);
+    c.id = "player-" + src.id;
+    Array.prototype.forEach.call(c.querySelectorAll("[data-target]"), function(el){
+      el.setAttribute("data-target", "player-" + el.getAttribute("data-target"));
+    });
+    player.appendChild(c);
+  });
+
+  function bareId(playerId){ return playerId.replace(/^player-/, ""); }
+
+  function renderGuide(id){
+    var g = GUIDE[id];
+    if(!g){ panel.innerHTML = ""; return; }
+    var step = ONBOARDING.indexOf(id);
+    var h = '<div class="gp-sections">'
+      + '<button type="button" data-section="player-screen-campaign"' + (step > -1 ? ' class="on"' : '') + '>Onboarding</button>'
+      + '<button type="button" data-section="player-screen-home"' + (step > -1 ? '' : ' class="on"') + '>Campaign home</button>'
+      + '</div>';
+    h += '<p class="gp-eyebrow">' + (step > -1 ? 'Onboarding, step ' + (step + 1) + ' of ' + ONBOARDING.length : 'You are here') + '</p><h3>' + g.name + '</h3><p class="gp-meta">' + g.meta + '</p>';
+    h += '<ul class="guide-list">';
+    if(g.next){
+      h += '<li class="go-next" data-go="' + g.next.go + '"><span class="num">1</span><span>' + g.next.label + '</span></li>';
+    } else if(g.end){
+      h += '<li class="end">' + g.end + '</li>';
+    }
+    if(g.also && g.also.length){
+      h += '</ul><p class="gp-also">You can also</p><ul class="guide-list">';
+      g.also.forEach(function(a){
+        h += '<li data-go="' + a.go + '"><span>' + a.label + '</span></li>';
+      });
+    }
+    h += '</ul>';
+    panel.innerHTML = h;
+  }
+
+  function countUps(state){
+    Array.prototype.forEach.call(state.querySelectorAll(".count-up"), function(el){
+      var to = parseInt(el.getAttribute("data-to"), 10) || 0;
+      var t0 = null;
+      function tick(ts){
+        if(t0 === null) t0 = ts;
+        var p = Math.min((ts - t0) / 700, 1);
+        el.textContent = String(Math.round(to * (1 - Math.pow(1 - p, 3))));
+        if(p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  function confetti(){
+    var colors = ["#d99a06", "#6a2c91", "#b99ae3", "#e8b232", "#2e7d4f"];
+    for(var i = 0; i < 26; i++){
+      var p = document.createElement("div");
+      p.className = "confetti";
+      p.style.left = (4 + Math.random() * 92) + "%";
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = (Math.random() * 0.25) + "s";
+      player.appendChild(p);
+      (function(el){ setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 1600); })(p);
+    }
+  }
+
+  function revealCard(card){
+    var c = card.querySelector("canvas");
+    var foil = card.querySelector(".foil");
+    if(foil) foil.style.display = "none";
+    if(c && !c.getAttribute("data-done")){
+      c.setAttribute("data-done", "1");
+      c.style.opacity = "0";
+      setTimeout(function(){ if(c.parentNode) c.parentNode.removeChild(c); }, 460);
+      confetti();
+    }
+  }
+
+  function initScratch(state){
+    Array.prototype.forEach.call(state.querySelectorAll(".scratchcard"), function(card){
+      var old = card.querySelector("canvas");
+      if(old) old.parentNode.removeChild(old);
+      var foil = card.querySelector(".foil");
+      if(foil) foil.style.display = "";
+      var w = card.clientWidth, h = card.clientHeight;
+      if(!w || !h) return;
+      var c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      var x = c.getContext("2d");
+      var g = x.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, "#d9d3e0"); g.addColorStop(.45, "#b9b0c6"); g.addColorStop(.55, "#ece6f2"); g.addColorStop(1, "#a89fb6");
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.fillStyle = "#4b1d6b"; x.font = "800 15px system-ui, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(card.getAttribute("data-label") || "Scratch here", w / 2, h / 2);
+      if(foil) foil.style.display = "none";
+      card.appendChild(c);
+      var down = false;
+      function erase(e){
+        var r = c.getBoundingClientRect();
+        var px = (e.clientX - r.left) * (w / r.width), py = (e.clientY - r.top) * (h / r.height);
+        x.globalCompositeOperation = "destination-out";
+        x.beginPath(); x.arc(px, py, 22, 0, Math.PI * 2); x.fill();
+      }
+      function check(){
+        if(c.getAttribute("data-done")) return;
+        var d = x.getImageData(0, 0, w, h).data, clear = 0, total = 0;
+        for(var i = 3; i < d.length; i += 64){ total++; if(d[i] === 0) clear++; }
+        if(clear / total > 0.45) revealCard(card);
+      }
+      c.addEventListener("pointerdown", function(e){ down = true; erase(e); });
+      c.addEventListener("pointermove", function(e){ if(down) erase(e); });
+      c.addEventListener("pointerup", function(){ down = false; check(); });
+      c.addEventListener("pointerleave", function(){ if(down){ down = false; check(); } });
+    });
+  }
+
+  function applyScreenEffects(state){
+    var id = bareId(state.id);
+    var scroller = state.querySelector(".app");
+    if(scroller) scroller.scrollTop = 0;
+    countUps(state);
+    initScratch(state);
+    if(id === "screen-plan" || id === "screen-star") confetti();
+  }
+
+  function activateById(targetId, direction, skipHistory){
+    Array.prototype.forEach.call(player.querySelectorAll(".screen-state"), function(s){
+      s.classList.remove("active");
+      s.removeAttribute("data-anim");
+    });
+    var next = document.getElementById(targetId);
+    if(!next) return;
+    next.classList.add("active");
+    next.setAttribute("data-anim", direction || "fwd");
+    var id = bareId(targetId);
+    renderGuide(id);
+    if(counter) counter.textContent = "Screen " + (order.indexOf(id) + 1) + " of " + order.length + ", " + (GUIDE[id] ? GUIDE[id].name : id);
+    applyScreenEffects(next);
+    if(!skipHistory){
+      try{ history.pushState({sid: targetId}, "", ""); }catch(e){ /* sandboxed viewers refuse pushState */ }
+    }
+  }
+
+  player.addEventListener("click", function(e){
+    var rb = e.target.closest ? e.target.closest(".revealbtn") : null;
+    if(rb){
+      var card = rb.previousElementSibling;
+      if(card && card.classList.contains("scratchcard")) revealCard(card);
+      return;
+    }
+    var el = e.target.closest ? e.target.closest("[data-target]") : null;
+    if(!el || el.hasAttribute("data-inert")) return;
+    activateById(el.getAttribute("data-target"), el.classList.contains("backbtn") ? "back" : "fwd");
+  });
+
+  panel.addEventListener("click", function(e){
+    var sb = e.target.closest ? e.target.closest("button[data-section]") : null;
+    if(sb){
+      activateById(sb.getAttribute("data-section"), "fade");
+      return;
+    }
+    var li = e.target.closest ? e.target.closest("li[data-go]") : null;
+    if(!li) return;
+    var active = player.querySelector(".screen-state.active");
+    if(!active) return;
+    var control = active.querySelector('[data-target="player-' + li.getAttribute("data-go") + '"]');
+    if(!control) return;
+    control.classList.add("flash");
+    setTimeout(function(){ control.classList.remove("flash"); }, 260);
+    control.click();
+  });
+
+  var touchX = null, touchY = null;
+  player.addEventListener("touchstart", function(e){
+    if(e.touches.length === 1){ touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; }
+  }, {passive:true});
+  player.addEventListener("touchend", function(e){
+    if(touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    var dy = e.changedTouches[0].clientY - touchY;
+    touchX = null;
+    if(Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+    var active = player.querySelector(".screen-state.active");
+    if(!active || !active.querySelector(".app.onb")) return;
+    var el = dx < 0 ? active.querySelector(".cta[data-target], .tapcard[data-target]") : active.querySelector(".backbtn[data-target]");
+    if(el) el.click();
+  }, {passive:true});
+
+  window.addEventListener("popstate", function(e){
+    if(e.state && e.state.sid && document.getElementById(e.state.sid)){
+      activateById(e.state.sid, "back", true);
+    }
+  });
+
+  var gallery = document.getElementById("gallery");
+  order.map(function(id){ return byId[id]; }).forEach(function(src){
+    var cap = CAPTIONS[src.id] || {t: src.id, d: "", pills: []};
+    var row = document.createElement("div");
+    row.className = "row";
+    var pc = document.createElement("div");
+    pc.className = "phone-cell";
+    var ph = document.createElement("div");
+    ph.className = "phone";
+    var scr = document.createElement("div");
+    scr.className = "phone-screen";
+    var shot = src.cloneNode(true);
+    shot.removeAttribute("id");
+    shot.className = "gallery-shot";
+    Array.prototype.forEach.call(shot.querySelectorAll("[data-target]"), function(el){ el.removeAttribute("data-target"); });
+    scr.appendChild(shot);
+    ph.appendChild(scr);
+    pc.appendChild(ph);
+    var cc = document.createElement("div");
+    cc.className = "caption-cell";
+    var pillHtml = cap.pills.map(function(p){ return '<span class="pill ' + p[1] + '">' + p[0] + '</span>'; }).join(" ");
+    cc.innerHTML = "<h3>" + cap.t + "</h3><p>" + cap.d + "</p><div class=\"legend\">" + pillHtml + "</div>";
+    row.appendChild(pc);
+    row.appendChild(cc);
+    gallery.appendChild(row);
+  });
+
+  var shownId = null;
+  new MutationObserver(function(){
+    var a = player.querySelector(".screen-state.active");
+    if(a && a.id !== shownId){ shownId = a.id; renderGuide(bareId(a.id)); }
+  }).observe(player, {subtree:true, attributes:true, attributeFilter:["class"]});
+
+  activateById("player-screen-campaign", "fade", true);
+})();
+</script>
+
+</body></html>
